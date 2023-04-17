@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Pedimento de órdenes de venta</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+	
+	
+</head>
+<body>
+	<header>
+		
+		<h1>Pedimento de órdenes de venta</h1>
+		<p>Introduzca la información solicitada para realizar la orden de venta</p>
+	</header>
+
+	<main>
+    <form id="formulario">
+        <div class="form-group">
+            <label for="clientes">Cliente:</label>
+            <select id="clientes" name="clientes">
+                <option value="">Seleccione un cliente</option>
+                <!-- Aquí se van a cargar los clientes del servicio web -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="fecha">Fecha:</label>
+            <input type="date" id="fecha" name="fecha" placeholder="Ingrese una fecha MAYOR A LA ACTUAL"><label for="datoextra"> MAYOR A LA ACTUAL</label>
+        </div>
+
+        <div class="form-group">
+            <label for="productos">Productos:</label>
+            <select id="productos" name="productos">
+                <option id="productoSelect" value="">Seleccione un producto</option>
+                <!-- Aquí se van a cargar los productos del servicio web -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" id="cantidad" name="cantidad" min="1">
+        </div>
+
+        <div class="form-group">
+            <button type="button" id="agregarProducto">Agregar producto</button>
+        </div>
+
+        <table id="tablaProductos">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio unitario</th>
+                    <th>Total</th>
+                    <th>Eliminar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se van a ir agregando los productos -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Subtotal:</td>
+                    <td id="subtotal">$0.00</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="3">IVA:</td>
+                    <td id="iva">$0.00</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="3">Total:</td>
+                    <td id="total">$0.00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Cargar los productos del servicio web
+            $.ajax({
+                url: 'https://www.infofast.com.mx/Erick/service/productos/',
+                type: 'POST',
+                data: { user: 'user_pruebas', pwd: 'Pru3B@5.' },
+                dataType: 'json',
+                success: function(data) {
+                    // Agregar los productos al select de productos
+                    var productosSelect = $('#productos');
+                    $.each(data, function(index, producto) {
+                        productosSelect.append('<option value="' +producto.nombre + '">' +producto.nombre + "  $"+producto.Precio + '</option>');
+                    });
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log('Error al cargar los productos:', textStatus, errorThrown);
+                }
+            });
+        });
+    </script>
+		<script>
+			$(document).ready(function() {
+					// Cargar los productos del servicio web
+					$.ajax({
+							url: 'https://www.infofast.com.mx/Erick/service/clientes/',
+							type: 'POST',
+							data: { user: 'user_pruebas', pwd: 'Pru3B@5.' },
+							dataType: 'json',
+							success: function(data) {
+									// Agregar los productos al select de productos
+									var clientesSelect = $('#clientes');
+									$.each(data, function(index, cliente) {
+											clientesSelect.append('<option value="' + cliente.id_cliente + '">' + cliente.nombre + '</option>');
+									});
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+									console.log('Error al cargar los productos:', textStatus, errorThrown);
+							}
+					});
+			});
+	</script>
+	<script>
+		// Al hacer clic en el botón "Agregar producto", vamos a agregar el producto a la tabla
+// Al hacer clic en el botón "Agregar producto", vamos a agregar el producto a la tabla
+$('#agregarProducto').on('click', function() {
+    var nombreproducto = $('#productos').val();
+		var cliente=$('#clientes')   //validaciones 
+    var cantidad = $('#cantidad').val();
+		console.log("producto: ",nombreproducto)
+		console.log("cantidad: ",cantidad)
+		if(cantidad<=0 || !cliente || !nombreproducto){
+			window.alert("Ingresa una cantidad del producto")
+		}
+    
+    // Hacer una solicitud AJAX para obtener el precio del producto seleccionado
+
+        $.ajax({
+        url: 'https://www.infofast.com.mx/Erick/service/productos/',
+        type: 'POST',
+        data: {user: 'user_pruebas', pwd: 'Pru3B@5.'},
+        success: function(response) {
+            var producto = response.producto;
+            var precio = producto.precio;
+
+            // Crear una nueva fila de tabla con los valores obtenidos
+            var fila = $('<tr>');
+            fila.append($('<td>').text(producto.nombre));
+            fila.append($('<td>').text(cantidad));
+            fila.append($('<td>').text('$' + precio.toFixed(2)));
+            fila.append($('<td>').text('$' + (precio * cantidad).toFixed(2)));
+            fila.append($('<td>').html('<button class="eliminarProducto">Eliminar</button>'));
+
+            // Agregar la fila a la tabla de productos
+            $('#tablaProductos tbody').append(fila);
+
+            // Actualizar los totales
+            actualizarTotales();
+        },
+        error: function() {
+            console.log('Hubo un error al obtener el precio del producto');
+        }
+    });
+        // Configuración de la petición AJAX
+       
+            // Crear una nueva fila de tabla con los valores obtenidos
+            // var fila = $('<tr>');
+            // fila.append($('<td>').text(producto.nombre));
+            // fila.append($('<td>').text(cantidad));
+            // fila.append($('<td>').text('$' + precio.toFixed(2)));
+            // fila.append($('<td>').text('$' + (precio * cantidad).toFixed(2)));
+            // fila.append($('<td>').html('<button class="eliminarProducto">Eliminar</button>'));
+
+            // Agregar la fila a la tabla de productos
+            // $('#tablaProductos tbody').append(fila);
+
+            // Actualizar los totales
+            // actualizarTotales();
+        
+  
+});
+
+
+
+	</script>
+</main>
+
+	
